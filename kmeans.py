@@ -15,8 +15,8 @@ class K_means(object):
         self.cluster_centers_ = None
 
     # ユークリッド距離を求める関数
-    def euclidean_distance(self, x, p):
-        return np.sum((x - p) ** 2)
+    def euclidean_distance(self, p0, p1):
+        return np.sum((p0 - p1) ** 2)
 
     # クラスタリングをする関数
     def fit_predict(self, features):
@@ -31,12 +31,7 @@ class K_means(object):
 
         # クラスタリングをアップデートする
         for _ in range(self.max_iter):
-
-            # 各クラスタごとにセントロイド (重心) を計算する
-            self.cluster_centers_ = np.array([features[pred == i].mean(axis=0)
-                                              for i in range(self.n_clusters)])
-
-            # 各特徴ベクトルから最短距離となる重心を基準に新しいラベルをつける
+            # 各要素から最短距離のセントロイドを基準にラベルを更新する
             new_pred = np.array([
                 np.array([
                     self.euclidean_distance(p, centroid)
@@ -46,10 +41,14 @@ class K_means(object):
             ])
 
             if np.all(new_pred == pred):
-                # 更新前と内容を比較して、もし同じなら終了
+                # 更新前と内容が同じなら終了
                 break
 
             pred = new_pred
+
+            # 各クラスタごとにセントロイド (重心) を再計算する
+            self.cluster_centers_ = np.array([features[pred == i].mean(axis=0)
+                                              for i in range(self.n_clusters)])
 
         return pred
 
@@ -59,24 +58,51 @@ if __name__ == "__main__":
     prefecture_data = pd.read_csv("./sangyohi.csv",header=None) # データ読み込み
 
     # Pandas のデータフレームから Numpy の行列 (Array) に変換
-    p_array = np.array( [] )
-    for i in range(len(prefecture_data.columns)):
-        p_array = np.append(p_array,[prefecture_data[i].tolist()])
+    p_array = np.array([prefecture_data[0].tolist(),
+                        prefecture_data[1].tolist(),
+                        prefecture_data[2].tolist(),
+                        prefecture_data[3].tolist(),
+                        prefecture_data[4].tolist(),
+                        prefecture_data[5].tolist(),
+                        prefecture_data[6].tolist(),
+                        prefecture_data[7].tolist(),
+                        prefecture_data[8].tolist(),
+                        prefecture_data[9].tolist(),
+                        prefecture_data[10].tolist(),
+                        prefecture_data[11].tolist(),
+                        prefecture_data[12].tolist(),
+                        prefecture_data[13].tolist(),
+                        prefecture_data[14].tolist(),
+                        prefecture_data[15].tolist(),
+                        prefecture_data[16].tolist(),
+                        prefecture_data[17].tolist(),
+                        prefecture_data[18].tolist(),
+                        prefecture_data[19].tolist(),
+                        prefecture_data[20].tolist(),
+                        prefecture_data[21].tolist(),
+                        prefecture_data[22].tolist(),
+                        prefecture_data[23].tolist(),
+                        prefecture_data[24].tolist(),
+                        prefecture_data[25].tolist(),
+                        prefecture_data[26].tolist(),
+                        prefecture_data[27].tolist(),
+                        prefecture_data[28].tolist(),
+                       ], np.float64)
 
     p_array = p_array.T # 行列を転置
+    # クラスタリングする
+    cls = K_means(n_clusters = K)
+    pred = cls.fit_predict(p_array)
 
-    print(p_array)
-    # # クラスタリングする
-    # cls = K_means(n_clusters = K)
-    # pred = cls.fit_predict(p_array)
-    #
-    # # 各要素をラベルごとに色付けして表示する
-    # for i in range(K):
-    #     labels = p_array[pred == i]
-    #     plt.scatter(labels[:, 0], labels[:, 1])
-    #
-    # centers = cls.cluster_centers_
-    # plt.scatter(centers[:, 0], centers[:, 1], s=100,
-    #             facecolors='none', edgecolors='black')
-    #
-    # plt.show()
+    prefecture_data['29']=pred
+    print(pred)
+    print(prefecture_data['29'].value_counts())
+
+    clusterinfo = pd.DataFrame()
+    for i in range(K):
+        clusterinfo['cluster' + str(i)] = prefecture_data[prefecture_data['29'] == i].mean()
+    clusterinfo = clusterinfo.drop('29')
+
+    my_plot = clusterinfo.T.plot(kind='bar', stacked=True, title="Mean Value of 2 Clusters")
+    my_plot.set_xticklabels(my_plot.xaxis.get_majorticklabels(), rotation=0)
+    plt.show()
